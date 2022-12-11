@@ -1,3 +1,0 @@
-
-
-Project ${{ value.name }}

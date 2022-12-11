@@ -1,0 +1,12 @@
+[
+{% set comma = joiner() %}
+{% for value in values.list -%}
+${{ comma() }}${{ value }}
+{%- endfor %}
+]
+
+[
+{% for value in values.list -%}
+${{ value }},
+{%- endfor %}
+]
