@@ -1,8 +1,8 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: tomelin-loop
-  title: Tomelin LOOP Template
+  name: loop-template
+  title: Loop Template
   description: Create a website powered with Next.js
   tags:
     - recommended
