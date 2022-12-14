@@ -1,0 +1,95 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- https://github.com/Tomelin/backstage-templates/kuberntes
+
+transformers:
+  - |-
+    apiVersion: builtin
+    kind: LabelTransformer
+    metadata:
+      name: commonLabelsTransformer
+    labels:
+      app.kubernetes.io/name: ${{values.application_name | trim | dump}}
+      app.kubernetes.io/project: ${{values.project_name | trim | dump}}
+    fieldSpecs:
+    # Deployment
+    - path: metadata/labels
+      create: true
+      kind: Deployment
+    - path: spec/template/metadata/labels
+      create: true
+      kind: Deployment
+    - path: spec/selector/matchLabels
+      create: true
+      kind: Deployment
+    # Service
+    - path: metadata/labels
+      create: true
+      kind: Service
+    - path: spec/selector
+      create: true
+      kind: Service
+    # HorizontalPodAutoscaler
+    - path: metadata/labels
+      create: true
+      kind: HorizontalPodAutoscaler
+patches:
+{%- if values.enabledDB.database %}
+# STARTS PostgreSQLServer
+- target:
+    kind: ResourceGroup
+    name: .*
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${{values.project_name | dump}}
+- target:
+    kind: PostgreSQLServer
+    name: .*
+  patch: |-
+    - op: replace
+      path: /spec/forProvider/resourceGroupNameRef/name
+      value: ${{values.project_name | trim | dump}}
+    - op: replace
+      path: /metadata/name
+      value: ${{values.application_name | trim | dump}}
+# END PostgreSQLServer
+  {% endif %}
+
+# STARTS Microservice
+- target:
+    kind: Deployment
+    name: .*
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${{values.application_name | dump}}
+    - op: add
+      path: /metadata/namespace
+      value: ${{values.project_name | dump}}
+- target:
+    kind: Service
+    name: .*
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${{values.application_name | dump}}
+    - op: add
+      path: /metadata/namespace
+      value: ${{values.project_name | dump}} 
+- target:
+    kind: HorizontalPodAutoscaler
+    name: .*
+  patch: |-
+    - op: replace
+      path: /metadata/name
+      value: ${{values.application_name | dump}}
+    - op: add
+      path: /metadata/namespace
+      value: ${{values.project_name | dump}}
+    - op: replace
+      path: /spec/scaleTargetRef/name
+      value: ${{values.application_name | dump}}      
+# END Microservice
